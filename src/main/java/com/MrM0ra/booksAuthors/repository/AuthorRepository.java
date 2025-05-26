@@ -8,6 +8,8 @@ import org.springframework.stereotype.Repository;
 
 import com.MrM0ra.booksAuthors.model.dto.AuthorDTO;
 
+import jakarta.annotation.PostConstruct;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -25,7 +27,8 @@ public class AuthorRepository {
     private SimpleJdbcCall deleteAuthorProc;
     private SimpleJdbcCall getAllAuthorsProc;
 
-    public AuthorRepository() {
+    @PostConstruct
+    public void init() {
         insertAuthorProc = new SimpleJdbcCall(jdbcTemplate)
                 .withProcedureName("insert_author");
 
@@ -72,13 +75,13 @@ public class AuthorRepository {
     }
 
     private static class AuthorRowMapper implements RowMapper<AuthorDTO> {
-    @Override
-    public AuthorDTO mapRow(ResultSet rs, int rowNum) throws SQLException {
-        AuthorDTO author = new AuthorDTO();
-        author.setId(rs.getInt("ID"));
-        author.setName(rs.getString("NAME"));
-        return author;
+        @Override
+        public AuthorDTO mapRow(ResultSet rs, int rowNum) throws SQLException {
+            AuthorDTO author = new AuthorDTO();
+            author.setId(rs.getInt("ID"));
+            author.setName(rs.getString("NAME"));
+            return author;
+        }
     }
-}
 }
 

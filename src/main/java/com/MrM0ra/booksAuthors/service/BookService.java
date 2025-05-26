@@ -5,6 +5,7 @@ import com.MrM0ra.booksAuthors.repository.BookRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -27,7 +28,7 @@ public class BookService {
         BookDTO book = new BookDTO();
         book.setId(id);
         book.setTitle((String) result.get("P_TITLE"));
-        book.setAuthorId((Integer) result.get("P_AUTHOR_ID"));
+        book.setAuthorId(((BigDecimal) result.get("P_AUTHOR_ID")).intValue());
         return book;
     }
 
