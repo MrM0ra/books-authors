@@ -18,8 +18,8 @@ Sigue estos pasos para levantar el entorno completo (backend + base de datos Ora
 ### Clona el repositorio:
 
 ```bash
-git clone https://github.com/tu-usuario/tu-repo.git
-cd tu-repo
+git clone https://github.com/MrM0ra/books-authors.git
+cd books-authors
 ```
 
 ### Construye la imagen del backend:
