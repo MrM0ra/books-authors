@@ -1,14 +1,20 @@
 package com.MrM0ra.booksAuthors.model.dto;
 
 public class AuthorDTO {
-    private int id;
+    private Long id;
     private String name;
 
+    public AuthorDTO(){}
+
+    public AuthorDTO(Long id, String name) {
+        this.id = id;
+        this.name = name;
+    }
     // Getters and setters
-    public int getId() {
+    public Long getId() {
         return id;
     }
-    public void setId(int id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

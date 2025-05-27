@@ -4,6 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcCall;
+import org.springframework.jdbc.core.SqlParameter;
+import org.springframework.jdbc.core.SqlOutParameter;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Repository;
 
 import com.MrM0ra.booksAuthors.model.dto.BookDTO;
@@ -12,6 +16,7 @@ import jakarta.annotation.PostConstruct;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.List;
 import java.util.Map;
 
@@ -30,72 +35,122 @@ public class BookRepository {
 
     @PostConstruct
     public void init() {
+        // Configuración para INSERT_BOOK
         insertBookProc = new SimpleJdbcCall(jdbcTemplate)
-                .withProcedureName("insert_book");
+                .withSchemaName("SYSTEM")
+                .withProcedureName("INSERT_BOOK")
+                .declareParameters(
+                    new SqlParameter("p_title", Types.VARCHAR),
+                    new SqlParameter("p_author_id", Types.NUMERIC),
+                    new SqlOutParameter("p_book_id", Types.NUMERIC)
+                );
 
+        // Configuración para UPDATE_BOOK
         updateBookProc = new SimpleJdbcCall(jdbcTemplate)
-                .withProcedureName("update_book");
+                .withSchemaName("SYSTEM")
+                .withProcedureName("UPDATE_BOOK")
+                .declareParameters(
+                    new SqlParameter("p_id", Types.NUMERIC),
+                    new SqlParameter("p_title", Types.VARCHAR),
+                    new SqlParameter("p_author_id", Types.NUMERIC)
+                );
 
+        // Configuración para GET_BOOK
         getBookProc = new SimpleJdbcCall(jdbcTemplate)
-                .withProcedureName("get_book");
+                .withSchemaName("SYSTEM")
+                .withProcedureName("GET_BOOK")
+                .declareParameters(
+                    new SqlParameter("p_id", Types.NUMERIC),
+                    new SqlOutParameter("p_title", Types.VARCHAR),
+                    new SqlOutParameter("p_author_id", Types.NUMERIC)
+                );
 
+        // Configuración para DELETE_BOOK
         deleteBookProc = new SimpleJdbcCall(jdbcTemplate)
-                .withProcedureName("delete_book");
-        
+                .withSchemaName("SYSTEM")
+                .withProcedureName("DELETE_BOOK")
+                .declareParameters(
+                    new SqlParameter("p_id", Types.NUMERIC)
+                );
+
+        // Configuración para GET_ALL_BOOKS
         getAllBooksProc = new SimpleJdbcCall(jdbcTemplate)
-            .withProcedureName("get_all_books")
-            .returningResultSet("P_CURSOR", new BookRowMapper());
+                .withSchemaName("SYSTEM")
+                .withProcedureName("GET_ALL_BOOKS")
+                .declareParameters(
+                    new SqlOutParameter("p_cursor", Types.REF_CURSOR, new BookRowMapper())
+                );
 
+        // Configuración para GET_BOOKS_BY_AUTHOR
         getBooksByAuthorProc = new SimpleJdbcCall(jdbcTemplate)
-            .withProcedureName("get_books_by_author")
-            .returningResultSet("P_CURSOR", new BookRowMapper());
+                .withSchemaName("SYSTEM")
+                .withProcedureName("GET_BOOKS_BY_AUTHOR")
+                .declareParameters(
+                    new SqlParameter("p_author_id", Types.NUMERIC),
+                    new SqlOutParameter("p_cursor", Types.REF_CURSOR, new BookRowMapper())
+                );
     }
 
-    public void insertBook(int id, String title, int authorId) {
-        insertBookProc.execute(Map.of(
-                "p_id", id,
-                "p_title", title,
-                "p_author_id", authorId
-        ));
+    public Long insertBook(String title, Long authorId) {
+        SqlParameterSource in = new MapSqlParameterSource()
+                .addValue("p_title", title)
+                .addValue("p_author_id", authorId);
+        
+        Map<String, Object> out = insertBookProc.execute(in);
+        return ((Number) out.get("p_book_id")).longValue();
     }
 
-    public void updateBook(int id, String title, int authorId) {
-        updateBookProc.execute(Map.of(
-                "p_id", id,
-                "p_title", title,
-                "p_author_id", authorId
-        ));
+    public void updateBook(Long id, String title, Long authorId) {
+        SqlParameterSource in = new MapSqlParameterSource()
+                .addValue("p_id", id)
+                .addValue("p_title", title)
+                .addValue("p_author_id", authorId);
+        
+        updateBookProc.execute(in);
     }
 
-    public Map<String, Object> getBook(int id) {
-        return getBookProc.execute(Map.of("p_id", id));
+    public BookDTO getBook(Long id) {
+        SqlParameterSource in = new MapSqlParameterSource()
+                .addValue("p_id", id);
+        
+        Map<String, Object> out = getBookProc.execute(in);
+        return new BookDTO(
+            id,
+            (String) out.get("p_title"),
+            ((Number) out.get("p_author_id")).longValue()
+        );
     }
 
-    public void deleteBook(int id) {
-        deleteBookProc.execute(Map.of("p_id", id));
+    public void deleteBook(Long id) {
+        SqlParameterSource in = new MapSqlParameterSource()
+                .addValue("p_id", id);
+        
+        deleteBookProc.execute(in);
     }
 
     @SuppressWarnings("unchecked")
     public List<BookDTO> getAllBooks() {
         Map<String, Object> result = getAllBooksProc.execute();
-        return (List<BookDTO>) result.get("P_CURSOR");
+        return (List<BookDTO>) result.get("p_cursor");
     }
 
     @SuppressWarnings("unchecked")
-    public List<BookDTO> getBooksByAuthor(int authorId) {
-        Map<String, Object> result = getBooksByAuthorProc.execute(Map.of("p_author_id", authorId));
-        return (List<BookDTO>) result.get("P_CURSOR");
+    public List<BookDTO> getBooksByAuthor(Long authorId) {
+        SqlParameterSource in = new MapSqlParameterSource()
+                .addValue("p_author_id", authorId);
+        
+        Map<String, Object> result = getBooksByAuthorProc.execute(in);
+        return (List<BookDTO>) result.get("p_cursor");
     }
-
 
     private static class BookRowMapper implements RowMapper<BookDTO> {
         @Override
         public BookDTO mapRow(ResultSet rs, int rowNum) throws SQLException {
-            BookDTO book = new BookDTO();
-            book.setId(rs.getInt("ID"));
-            book.setTitle(rs.getString("TITLE"));
-            book.setAuthorId(rs.getInt("AUTHOR_ID"));
-            return book;
+            return new BookDTO(
+                rs.getLong("book_id"),
+                rs.getString("title"),
+                rs.getLong("author_id")
+            );
         }
     }
 }

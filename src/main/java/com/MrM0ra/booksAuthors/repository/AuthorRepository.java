@@ -4,6 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcCall;
+import org.springframework.jdbc.core.SqlParameter;
+import org.springframework.jdbc.core.SqlOutParameter;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Repository;
 
 import com.MrM0ra.booksAuthors.model.dto.AuthorDTO;
@@ -12,6 +16,7 @@ import jakarta.annotation.PostConstruct;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.List;
 import java.util.Map;
 
@@ -29,59 +34,94 @@ public class AuthorRepository {
 
     @PostConstruct
     public void init() {
+        // Configuración para INSERT_AUTHOR
         insertAuthorProc = new SimpleJdbcCall(jdbcTemplate)
-                .withProcedureName("insert_author");
+                .withSchemaName("SYSTEM")
+                .withProcedureName("INSERT_AUTHOR")
+                .declareParameters(
+                    new SqlParameter("p_name", Types.VARCHAR),
+                    new SqlOutParameter("p_id", Types.NUMERIC)
+                );
 
+        // Configuración para UPDATE_AUTHOR
         updateAuthorProc = new SimpleJdbcCall(jdbcTemplate)
-                .withProcedureName("update_author");
+                .withSchemaName("SYSTEM")
+                .withProcedureName("UPDATE_AUTHOR")
+                .declareParameters(
+                    new SqlParameter("p_id", Types.NUMERIC),
+                    new SqlParameter("p_name", Types.VARCHAR)
+                );
 
+        // Configuración para GET_AUTHOR
         getAuthorProc = new SimpleJdbcCall(jdbcTemplate)
-                .withProcedureName("get_author");
+                .withSchemaName("SYSTEM")
+                .withProcedureName("GET_AUTHOR")
+                .declareParameters(
+                    new SqlParameter("p_id", Types.NUMERIC),
+                    new SqlOutParameter("p_name", Types.VARCHAR)
+                );
 
+        // Configuración para DELETE_AUTHOR
         deleteAuthorProc = new SimpleJdbcCall(jdbcTemplate)
-                .withProcedureName("delete_author");
+                .withSchemaName("SYSTEM")
+                .withProcedureName("DELETE_AUTHOR")
+                .declareParameters(
+                    new SqlParameter("p_id", Types.NUMERIC)
+                );
 
+        // Configuración para GET_ALL_AUTHORS
         getAllAuthorsProc = new SimpleJdbcCall(jdbcTemplate)
-                .withProcedureName("get_all_authors")
-                .returningResultSet("P_CURSOR", new AuthorRowMapper());
+                .withSchemaName("SYSTEM")
+                .withProcedureName("GET_ALL_AUTHORS")
+                .declareParameters(
+                    new SqlOutParameter("p_cursor", Types.REF_CURSOR, new AuthorRowMapper())
+                );
     }
 
-    public void insertAuthor(int id, String name) {
-        insertAuthorProc.execute(Map.of(
-                "p_id", id,
-                "p_name", name
-        ));
+    public Long insertAuthor(String name) {
+        SqlParameterSource in = new MapSqlParameterSource()
+                .addValue("p_name", name);
+        
+        Map<String, Object> out = insertAuthorProc.execute(in);
+        return ((Number) out.get("p_id")).longValue();
     }
 
-    public void updateAuthor(int id, String name) {
-        updateAuthorProc.execute(Map.of(
-                "p_id", id,
-                "p_name", name
-        ));
+    public void updateAuthor(Long id, String name) {
+        SqlParameterSource in = new MapSqlParameterSource()
+                .addValue("p_id", id)
+                .addValue("p_name", name);
+        
+        updateAuthorProc.execute(in);
     }
 
-    public Map<String, Object> getAuthor(int id) {
-        return getAuthorProc.execute(Map.of("p_id", id));
+    public String getAuthorName(Long id) {
+        SqlParameterSource in = new MapSqlParameterSource()
+                .addValue("p_id", id);
+        
+        Map<String, Object> out = getAuthorProc.execute(in);
+        return (String) out.get("p_name");
     }
 
-    public void deleteAuthor(int id) {
-        deleteAuthorProc.execute(Map.of("p_id", id));
+    public void deleteAuthor(Long id) {
+        SqlParameterSource in = new MapSqlParameterSource()
+                .addValue("p_id", id);
+        
+        deleteAuthorProc.execute(in);
     }
 
     @SuppressWarnings("unchecked")
     public List<AuthorDTO> getAllAuthors() {
         Map<String, Object> result = getAllAuthorsProc.execute();
-        return (List<AuthorDTO>) result.get("P_CURSOR");
+        return (List<AuthorDTO>) result.get("p_cursor");
     }
 
     private static class AuthorRowMapper implements RowMapper<AuthorDTO> {
         @Override
         public AuthorDTO mapRow(ResultSet rs, int rowNum) throws SQLException {
-            AuthorDTO author = new AuthorDTO();
-            author.setId(rs.getInt("ID"));
-            author.setName(rs.getString("NAME"));
-            return author;
+            return new AuthorDTO(
+                rs.getLong("author_id"),
+                rs.getString("name")
+            );
         }
     }
 }
-

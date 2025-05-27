@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class AuthorService {
@@ -15,22 +14,22 @@ public class AuthorService {
     private AuthorRepository authorRepository;
 
     public void createAuthor(AuthorDTO author) {
-        authorRepository.insertAuthor(author.getId(), author.getName());
+        authorRepository.insertAuthor(author.getName());
     }
 
     public void updateAuthor(AuthorDTO author) {
         authorRepository.updateAuthor(author.getId(), author.getName());
     }
 
-    public AuthorDTO getAuthor(int id) {
-        Map<String, Object> result = authorRepository.getAuthor(id);
+    public AuthorDTO getAuthor(Long id) {
+        String result = authorRepository.getAuthorName(id);
         AuthorDTO author = new AuthorDTO();
         author.setId(id);
-        author.setName((String) result.get("P_NAME")); // cuidado con el nombre en mayúsculas
+        author.setName(result); // cuidado con el nombre en mayúsculas
         return author;
     }
 
-    public void deleteAuthor(int id) {
+    public void deleteAuthor(Long id) {
         authorRepository.deleteAuthor(id);
     }
 

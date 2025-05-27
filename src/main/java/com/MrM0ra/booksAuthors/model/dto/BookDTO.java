@@ -1,18 +1,25 @@
 package com.MrM0ra.booksAuthors.model.dto;
 
 public class BookDTO {
-    private int id;
+    private Long id;
     private String title;
-    private int authorId;
+    private Long authorId;
 
+    public BookDTO(){}
+
+    public BookDTO(Long id, String title, Long authorId) {
+        this.id = id;
+        this.title = title;
+        this.authorId = authorId;
+    }
     // Getters and setters
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
 
-    public int getAuthorId() { return authorId; }
-    public void setAuthorId(int authorId) { this.authorId = authorId; }
+    public Long getAuthorId() { return authorId; }
+    public void setAuthorId(Long authorId) { this.authorId = authorId; }
 }
 

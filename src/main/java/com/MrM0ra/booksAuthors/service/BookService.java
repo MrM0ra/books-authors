@@ -5,9 +5,7 @@ import com.MrM0ra.booksAuthors.repository.BookRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class BookService {
@@ -16,23 +14,19 @@ public class BookService {
     private BookRepository bookRepository;
 
     public void createBook(BookDTO book) {
-        bookRepository.insertBook(book.getId(), book.getTitle(), book.getAuthorId());
+        bookRepository.insertBook(book.getTitle(), book.getAuthorId());
     }
 
     public void updateBook(BookDTO book) {
         bookRepository.updateBook(book.getId(), book.getTitle(), book.getAuthorId());
     }
 
-    public BookDTO getBook(int id) {
-        Map<String, Object> result = bookRepository.getBook(id);
-        BookDTO book = new BookDTO();
-        book.setId(id);
-        book.setTitle((String) result.get("P_TITLE"));
-        book.setAuthorId(((BigDecimal) result.get("P_AUTHOR_ID")).intValue());
-        return book;
+    public BookDTO getBook(Long id) {
+        BookDTO result = bookRepository.getBook(id);
+        return result;
     }
 
-    public void deleteBook(int id) {
+    public void deleteBook(Long id) {
         bookRepository.deleteBook(id);
     }
 
@@ -40,7 +34,7 @@ public class BookService {
         return bookRepository.getAllBooks();
     }
 
-    public List<BookDTO> getBooksByAuthor(int authorId) {
+    public List<BookDTO> getBooksByAuthor(Long authorId) {
         return bookRepository.getBooksByAuthor(authorId);
     }
     
