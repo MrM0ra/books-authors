@@ -3,6 +3,49 @@
 API REST para administrar libros y autores usando un backend PL/SQL y Spring Boot.
 
 ---
+## 🚀 Cómo ejecutar el proyecto
+
+Sigue estos pasos para levantar el entorno completo (backend + base de datos Oracle) usando Docker y Docker Compose:
+
+### ✅ Requisitos previos
+
+- Docker instalado
+- Docker Compose instalado
+- Java 17+
+- Maven instalado
+
+### 🛠️ Paso a paso
+### Clona el repositorio:
+
+```bash
+git clone https://github.com/tu-usuario/tu-repo.git
+cd tu-repo
+```
+
+### Construye la imagen del backend:
+
+```bash
+mvn clean package -DskipTests
+```
+
+### Levanta los servicios con Docker Compose:
+
+```bash
+docker-compose up --build
+```
+
+Esto levantará:
+
+### - Una base de datos Oracle usando gvenzl/oracle-free
+### - El backend Java (Spring Boot), una vez la base de datos esté saludable
+
+Verifica que todo esté corriendo:
+
+Backend: http://localhost:8080
+
+Oracle DB: puerto 1521 (no expone UI, pero puedes conectarte vía SQL Developer o similar)
+
+🧪 Endpoints disponibles
 
 ## Endpoints disponibles
 
